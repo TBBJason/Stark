@@ -25,6 +25,20 @@ target_metadata = Base.metadata
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
+import os
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
+DATABASE_URL_DIRECT = os.getenv("DATABASE_URL_DIRECT")
+
+if not DATABASE_URL_DIRECT:
+    raise ValueError("DATABASE_URL_DIRECT not found.")
+
+config.set_main_option("sqlalchemy.url", DATABASE_URL_DIRECT)
+
+config = context.config
 
 
 def run_migrations_offline() -> None:
