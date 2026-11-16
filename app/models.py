@@ -30,20 +30,32 @@ class User(Base):
 
 class Movie(Base):
     __tablename__ = "movies"
+    __table_args__ = (
+        UniqueConstraint(
+            "tmdb_id",
+            name="uq_movies_tmdb_id",
+        ),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     tmdb_id: Mapped[int] = mapped_column(
         nullable=False,
     )
-    title: Mapped[str] = mapped_column(
-        String(200),
-        unique=True,
+
+    tmdb_id = Mapped[Int] = mapped_column(
         nullable=False,
     )
+
+    title: Mapped[str] = mapped_column(
+        String(200),
+        nullable=False,
+    )
+    
     release_date: Mapped[date | None] = mapped_column(
         Date,
         nullable=True,
         )
+
     overview: Mapped[str | None] = mapped_column(
         Text,
         nullable=True,
