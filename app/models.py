@@ -38,11 +38,8 @@ class Movie(Base):
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    
     tmdb_id: Mapped[int] = mapped_column(
-        nullable=False,
-    )
-
-    tmdb_id = Mapped[Int] = mapped_column(
         nullable=False,
     )
 

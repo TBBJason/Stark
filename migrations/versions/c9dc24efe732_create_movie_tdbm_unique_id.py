@@ -19,25 +19,27 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.drop_constraint(
-        "movies_title_key",
-        "movies",
-        type_="unique",
-    )
-    op.create_unique_constraint(
-        "uq_movies_tmdb_id",
-        "movies",
-        ["tmdb_id"],
-    )
+    # op.drop_constraint(
+    #     "movies_title_key",
+    #     "movies",
+    #     type_="unique",
+    # )
+    # op.create_unique_constraint(
+    #     "uq_movies_tmdb_id",
+    #     "movies",
+    #     ["tmdb_id"],
+    # )
+    pass
 
 def downgrade() -> None:
-    op.drop_constraint(
-        "uq_movies_tmdb_id",
-        "movies",
-        type_="unique",
-    )
-    op.create_unique_constraint(
-        "movies_title_key",
-        "movies",
-        ["title"],
-    )
+    # op.drop_constraint(
+    #     "uq_movies_tmdb_id",
+    #     "movies",
+    #     type_="unique",
+    # )
+    # op.create_unique_constraint(
+    #     "movies_title_key",
+    #     "movies",
+    #     ["title"],
+    pass
+    # )

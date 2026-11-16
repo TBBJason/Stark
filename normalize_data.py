@@ -8,7 +8,7 @@ def normalize_movie(movie: dict[str, Any]) -> dict[str, Any]:
         "tmdb_id": int(movie["id"]),
         "title": movie["title"],
         "release_date": (
-            date.foromisoformat(release_date)
+            date.fromisoformat(release_date)
             if release_date
             else None),
         "overview": movie.get("overview") or None
