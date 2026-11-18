@@ -13,3 +13,9 @@ def normalize_movie(movie: dict[str, Any]) -> dict[str, Any]:
             else None),
         "overview": movie.get("overview") or None
     }
+
+def normalize_movies(movies: list[dict[str, Any]],) -> list[dict[str, Any]]:
+    return [
+        normalize_movie(movie)
+        for movie in movies
+    ]

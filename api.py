@@ -3,6 +3,8 @@ import os
 from dotenv import load_dotenv
 from typing import Any
 from pprint import pprint
+from normalize_data import normalize_movies
+from collections.abc import Iterator
 
 load_dotenv()
 
@@ -32,30 +34,58 @@ def fetch_movie_page(year:int, page:int = 1,) -> dict[str, Any]:
     )
     return response
 
+
+def fetch_movie_pages(
+    year: int,
+    max_pages: int | None = None,
+) -> Iterator[dict[str, Any]]:
+    page = 1
+
+    while True:
+        response = fetch_movie_page(
+            year=year,
+            page=page,
+        )
+
+        yield response
+
+        total_pages = int(response["total_pages"])
+
+        if page >= total_pages:
+            break
+
+        if max_pages is not None and page >= max_pages:
+            break
+
+        page += 1
+
+
 if __name__ == "__main__":
-    response = fetch_movie_page(year=2026, page=1)
+    total_normalized = 0
 
-    print("\nTop-level fields:")
-    print(response.keys())
+    for response in fetch_movie_pages(
+        year=2026,
+        max_pages=3,
+    ):
+        raw_movies = response.get("results", [])
+        normalized_movies = normalize_movies(raw_movies)
 
-    print("\nPagination:")
-    print(f"Current page: {response['page']}")
-    print(f"Total pages: {response['total_pages']}")
-    print(f"Total results: {response['total_results']}")
-    print(f"Results on this page: {len(response['results'])}")
+        total_normalized += len(normalized_movies)
 
-    if response["results"]:
-        first_movie = response["results"][0]
+        print(
+            f"Page {response['page']} of "
+            f"{response['total_pages']}: "
+            f"{len(normalized_movies)} movies normalized"
+        )
 
-        print("\nAvailable fields for one movie:")
-        pprint(sorted(first_movie.keys()))
+        if normalized_movies:
+            print(
+                "First movie:",
+                normalized_movies[0]["title"],
+            )
 
-        print("\nSelected movie data:")
-        pprint({
-            "id": first_movie.get("id"),
-            "title": first_movie.get("title"),
-            "release_date": first_movie.get("release_date"),
-            "overview": first_movie.get("overview"),
-            "genre_ids": first_movie.get("genre_ids"),
-        })
+    print(
+        f"\nTotal movies normalized: "
+        f"{total_normalized}"
+    )
 
