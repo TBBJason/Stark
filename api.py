@@ -5,6 +5,8 @@ from typing import Any
 from pprint import pprint
 from normalize_data import normalize_movies
 from collections.abc import Iterator
+from app.database import SessionLocal
+from app.repositories.movies import upsert_movies
 
 load_dotenv()
 
@@ -26,20 +28,18 @@ def fetch_movie_page(year:int, page:int = 1,) -> dict[str, Any]:
     response = discover.movie(
         primary_release_date_gte=f"{year}-01-01",
         primary_release_date_lte=f"{year}-12-31",
-        sort_by="primary_release_date.asc",
+        sort_by="popularity.desc",
         include_adult=False,
         include_video=False,
         language="en-US",
+        with_original_language="en",
         page=page,
     )
     return response
 
 
-def fetch_movie_pages(
-    year: int,
-    max_pages: int | None = None,
-) -> Iterator[dict[str, Any]]:
-    page = 1
+def fetch_movie_pages(year: int,max_pages: int | None = None,) -> Iterator[dict[str, Any]]:
+    page = 6
 
     while True:
         response = fetch_movie_page(
@@ -61,31 +61,30 @@ def fetch_movie_pages(
 
 
 if __name__ == "__main__":
-    total_normalized = 0
+    total_processed = 0
 
     for response in fetch_movie_pages(
         year=2026,
-        max_pages=3,
+        max_pages=5,
     ):
         raw_movies = response.get("results", [])
         normalized_movies = normalize_movies(raw_movies)
 
-        total_normalized += len(normalized_movies)
-
-        print(
-            f"Page {response['page']} of "
-            f"{response['total_pages']}: "
-            f"{len(normalized_movies)} movies normalized"
-        )
-
-        if normalized_movies:
-            print(
-                "First movie:",
-                normalized_movies[0]["title"],
+        with SessionLocal.begin() as session:
+            upsert_movies(
+                session=session,
+                movies=normalized_movies,
             )
 
+        total_processed += len(normalized_movies)
+
+        print(
+            f"Page {response['page']}: "
+            f"{len(normalized_movies)} movies processed"
+        )
+
     print(
-        f"\nTotal movies normalized: "
-        f"{total_normalized}"
+        f"\nTotal movies processed: "
+        f"{total_processed}"
     )
 
