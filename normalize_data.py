@@ -5,13 +5,20 @@ def normalize_movie(movie: dict[str, Any]) -> dict[str, Any]:
     release_date = movie.get("release_date")
 
     return {
-        "tmdb_id": int(movie["id"]),
-        "title": movie["title"],
-        "release_date": (
-            date.fromisoformat(release_date)
-            if release_date
-            else None),
-        "overview": movie.get("overview") or None
+        "movie": {
+            "tmdb_id": int(movie["id"]),
+            "title": movie["title"],
+            "release_date": (
+                date.fromisoformat(release_date)
+                if release_date
+                else None
+            ),
+            "overview": movie.get("overview") or None,
+        },
+        "genre_ids": [
+            int(genre_id)
+            for genre_id in movie.get("genre_ids", [])
+        ],
     }
 
 def normalize_movies(movies: list[dict[str, Any]],) -> list[dict[str, Any]]:

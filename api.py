@@ -39,7 +39,7 @@ def fetch_movie_page(year:int, page:int = 1,) -> dict[str, Any]:
 
 
 def fetch_movie_pages(year: int,max_pages: int | None = None,) -> Iterator[dict[str, Any]]:
-    page = 6
+    page = 1
 
     while True:
         response = fetch_movie_page(
@@ -64,11 +64,14 @@ if __name__ == "__main__":
     total_processed = 0
 
     for response in fetch_movie_pages(
-        year=2026,
-        max_pages=5,
+        year=2025,
+        max_pages=10,
     ):
         raw_movies = response.get("results", [])
-        normalized_movies = normalize_movies(raw_movies)
+        normalized = normalize_movies(raw_movies)
+
+        normalized_movies = normalized["movie"]
+        normalized_genres = normalized["genre_ids"]
 
         with SessionLocal.begin() as session:
             upsert_movies(
