@@ -17,7 +17,7 @@ def normalize_movie(movie: dict[str, Any]) -> dict[str, Any]:
         },
         "genre_ids": [
             int(genre_id)
-            for genre_id in movie.get("genre_ids", [])
+            for genre_id in movie["genre_ids"]
         ],
     }
 
@@ -25,4 +25,16 @@ def normalize_movies(movies: list[dict[str, Any]],) -> list[dict[str, Any]]:
     return [
         normalize_movie(movie)
         for movie in movies
+    ]
+
+def normalize_genre(genre:dict[str, Any],) -> dict[str,Any]:
+    return {
+        "tmdb_id": int(genre["id"]),
+        "name":genre["name"],
+    }
+
+def normalize_genres(genres:list[dict[str,Any]],) -> list[dict[str,Any]]:
+    return [
+        normalize_genre(genre)
+        for genre in genres
     ]

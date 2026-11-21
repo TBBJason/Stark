@@ -7,6 +7,14 @@ from normalize_data import normalize_movies
 from collections.abc import Iterator
 from app.database import SessionLocal
 from app.repositories.movies import upsert_movies
+from normalize_data import (
+    normalize_genres,
+    normalize_movies,
+)
+from app.repositories.genres import (
+    replace_movie_genres,
+    upsert_genres,
+)
 
 load_dotenv()
 
@@ -59,35 +67,73 @@ def fetch_movie_pages(year: int,max_pages: int | None = None,) -> Iterator[dict[
 
         page += 1
 
+def fetch_movie_genres() -> list[dict[str,Any]]:
+    response = tmdb.Genres().movie_list(
+        language="en-US",
+    )
+
+
+    return response.get("genres", [])
+
 
 if __name__ == "__main__":
+    raw_genres = fetch_movie_genres()
+    normalized_genres = normalize_genres(raw_genres)
+
+    with SessionLocal.begin() as session:
+        local_genre_ids_by_tmdb_id = upsert_genres(
+            session=session,
+            genres=normalized_genres,
+        )
+
+    print(
+        f"{len(normalized_genres)} genres processed"
+    )
+
     total_processed = 0
 
     for response in fetch_movie_pages(
         year=2025,
-        max_pages=10,
+        max_pages=1,
     ):
         raw_movies = response.get("results", [])
-        normalized = normalize_movies(raw_movies)
+        normalized_records = normalize_movies(raw_movies)
 
-        normalized_movies = normalized["movie"]
-        normalized_genres = normalized["genre_ids"]
+        movie_rows = [
+            record["movie"]
+            for record in normalized_records
+        ]
+
+        movie_genres_by_tmdb_id = {
+            record["movie"]["tmdb_id"]: record["genre_ids"]
+            for record in normalized_records
+        }
 
         with SessionLocal.begin() as session:
-            upsert_movies(
+            local_movie_ids_by_tmdb_id = upsert_movies(
                 session=session,
-                movies=normalized_movies,
+                movies=movie_rows,
             )
 
-        total_processed += len(normalized_movies)
+            replace_movie_genres(
+                session=session,
+                movie_genres_by_tmdb_id=movie_genres_by_tmdb_id,
+                local_movie_ids_by_tmdb_id=(
+                    local_movie_ids_by_tmdb_id
+                ),
+                local_genre_ids_by_tmdb_id=(
+                    local_genre_ids_by_tmdb_id
+                ),
+            )
+
+        total_processed += len(movie_rows)
 
         print(
             f"Page {response['page']}: "
-            f"{len(normalized_movies)} movies processed"
+            f"{len(movie_rows)} movies processed"
         )
 
     print(
         f"\nTotal movies processed: "
         f"{total_processed}"
     )
-

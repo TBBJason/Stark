@@ -14,13 +14,22 @@ def upsert_movies(
 
     insert_statement = insert(Movie).values(movies)
 
-    upsert_statement = insert_statement.on_conflict_do_update(
-        constraint="uq_movies_tmdb_id",
-        set_={
-            "title": insert_statement.excluded.title,
-            "release_date": insert_statement.excluded.release_date,
-            "overview": insert_statement.excluded.overview,
-        },
+    upsert_statement = (
+        insert_statement.on_conflict_do_update(
+            constraint="uq_movies_tmdb_id",
+            set_={
+                "title": insert_statement.excluded.title,
+                "release_date": insert_statement.excluded.release_date,
+                "overview": insert_statement.excluded.overview,
+            },
+        ).returning (
+            Movie.tmdb_id,
+            Movie.id,
+        )
     )
 
     session.execute(upsert_statement)
+
+    result = session.execute(upsert_statement)
+
+    return dict(result.all())

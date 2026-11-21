@@ -10,20 +10,22 @@ class NormalizeMovieTests(unittest.TestCase):
             "title": "Example Movie",
             "release_date": "2026-04-12",
             "overview": "An example overview.",
+            "genre_ids": [28, 878],
         }
 
         result = normalize_movie(raw_movie)
 
-        self.assertEqual(result["tmdb_id"], 12345)
-        self.assertEqual(result["title"], "Example Movie")
+        self.assertEqual(result["movie"]["tmdb_id"], 12345)
+        self.assertEqual(result["movie"]["title"], "Example Movie")
         self.assertEqual(
-            result["release_date"],
+            result["movie"]["release_date"],
             date(2026, 4, 12),
         )
         self.assertEqual(
-            result["overview"],
+            result["movie"]["overview"],
             "An example overview.",
         )
+        self.assertEqual(result["genre_ids"], [28,878])
 
     def test_converts_empty_optional_fields_to_none(self) -> None:
         raw_movie = {
@@ -31,12 +33,13 @@ class NormalizeMovieTests(unittest.TestCase):
             "title": "Example Movie",
             "release_date": "",
             "overview": "",
+            "genre_ids": [],
         }
 
         result = normalize_movie(raw_movie)
 
-        self.assertIsNone(result["release_date"])
-        self.assertIsNone(result["overview"])
+        self.assertIsNone(result["movie"]["release_date"])
+        self.assertIsNone(result["movie"]["overview"])
 
     def test_rejects_an_invalid_release_date(self) -> None:
         raw_movie = {
@@ -44,6 +47,7 @@ class NormalizeMovieTests(unittest.TestCase):
             "title": "Example Movie",
             "release_date": "not-a-date",
             "overview": "An example overview.",
+            "genre_ids": [28, 878],
         }
 
         with self.assertRaises(ValueError):
@@ -54,6 +58,7 @@ class NormalizeMovieTests(unittest.TestCase):
             "title": "Example Movie",
             "release_date": "2026-04-12",
             "overview": "An example overview.",
+            "genre_ids": [28, 878],
         }
 
         with self.assertRaises(KeyError):
