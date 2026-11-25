@@ -8,7 +8,7 @@ from app.models import Movie
 def upsert_movies(
     session: Session,
     movies: list[dict[str, Any]],
-) -> None:
+) -> dict[int,int]:
     if not movies:
         return
 
@@ -27,8 +27,6 @@ def upsert_movies(
             Movie.id,
         )
     )
-
-    session.execute(upsert_statement)
 
     result = session.execute(upsert_statement)
 

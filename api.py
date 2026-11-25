@@ -91,47 +91,47 @@ if __name__ == "__main__":
     )
 
     total_processed = 0
+    for i in range(2015, 2022):
+        for response in fetch_movie_pages(
+            year=i,
+            max_pages=10,
+        ):
+            raw_movies = response.get("results", [])
+            normalized_records = normalize_movies(raw_movies)
 
-    for response in fetch_movie_pages(
-        year=2025,
-        max_pages=1,
-    ):
-        raw_movies = response.get("results", [])
-        normalized_records = normalize_movies(raw_movies)
+            movie_rows = [
+                record["movie"]
+                for record in normalized_records
+            ]
 
-        movie_rows = [
-            record["movie"]
-            for record in normalized_records
-        ]
+            movie_genres_by_tmdb_id = {
+                record["movie"]["tmdb_id"]: record["genre_ids"]
+                for record in normalized_records
+            }
 
-        movie_genres_by_tmdb_id = {
-            record["movie"]["tmdb_id"]: record["genre_ids"]
-            for record in normalized_records
-        }
+            with SessionLocal.begin() as session:
+                local_movie_ids_by_tmdb_id = upsert_movies(
+                    session=session,
+                    movies=movie_rows,
+                )
 
-        with SessionLocal.begin() as session:
-            local_movie_ids_by_tmdb_id = upsert_movies(
-                session=session,
-                movies=movie_rows,
+                replace_movie_genres(
+                    session=session,
+                    movie_genres_by_tmdb_id=movie_genres_by_tmdb_id,
+                    local_movie_ids_by_tmdb_id=(
+                        local_movie_ids_by_tmdb_id
+                    ),
+                    local_genre_ids_by_tmdb_id=(
+                        local_genre_ids_by_tmdb_id
+                    ),
+                )
+
+            total_processed += len(movie_rows)
+
+            print(
+                f"Page {response['page']}: "
+                f"{len(movie_rows)} movies processed"
             )
-
-            replace_movie_genres(
-                session=session,
-                movie_genres_by_tmdb_id=movie_genres_by_tmdb_id,
-                local_movie_ids_by_tmdb_id=(
-                    local_movie_ids_by_tmdb_id
-                ),
-                local_genre_ids_by_tmdb_id=(
-                    local_genre_ids_by_tmdb_id
-                ),
-            )
-
-        total_processed += len(movie_rows)
-
-        print(
-            f"Page {response['page']}: "
-            f"{len(movie_rows)} movies processed"
-        )
 
     print(
         f"\nTotal movies processed: "
