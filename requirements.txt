@@ -7,3 +7,6 @@ pydantic-settings
 httpx
 python-dotenv
 tmdbsimple
+PyJWT
+pwdlib[argon2]
+email-validator
